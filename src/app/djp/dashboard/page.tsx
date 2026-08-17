@@ -20,6 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Users, Flag, ShieldCheck, FileCheck, Landmark } from "lucide-react"
+import SigapLoader from "@/components/SigapLoader"
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -79,6 +80,7 @@ const anomaliList = [
 
 export default function DjpDashboardPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [expandedKpi, setExpandedKpi] = useState<string | null>(null)
   const [notifState, setNotifState] = useState<Record<string, ActionState>>({})
   const [verifState, setVerifState] = useState<Record<string, ActionState>>({})
   const [showAllModal, setShowAllModal] = useState(false)
@@ -108,6 +110,7 @@ export default function DjpDashboardPage() {
 
   const kpis = [
     {
+      id: "platform",
       label: "Platform Terpantau",
       value: summaryStats.totalPlatform.value.toLocaleString("id-ID"),
       trend: summaryStats.totalPlatform.trend,
@@ -115,8 +118,17 @@ export default function DjpDashboardPage() {
       icon: Users,
       color: "text-slate-800",
       bar: "bg-slate-800",
+      detail: {
+        deskripsi: "Total seluruh platform PMSE yang saat ini berada dalam radar pemantauan RADAR PMSE/FiskaLens, mencakup semua status kepatuhan.",
+        rincian: [
+          { label: "Kategori AI Generatif", value: "412 platform" },
+          { label: "Kategori Non-AI", value: "872 platform" },
+          { label: "Ditambahkan bulan ini", value: "23 platform" },
+        ],
+      },
     },
     {
+      id: "redflag",
       label: "Red Flag Aktif",
       value: summaryStats.totalRedFlag.value.toLocaleString("id-ID"),
       trend: summaryStats.totalRedFlag.trend,
@@ -124,8 +136,17 @@ export default function DjpDashboardPage() {
       icon: Flag,
       color: "text-red-600",
       bar: "bg-red-500",
+      detail: {
+        deskripsi: "Platform yang traffic atau transaksinya sudah melampaui ambang batas, namun belum mengajukan SKD maupun terdaftar sebagai pemungut resmi.",
+        rincian: [
+          { label: "Prioritas tinggi (confidence >80%)", value: "21 platform" },
+          { label: "Sudah dieskalasi ke titik jepit", value: "14 platform" },
+          { label: "Menunggu investigasi awal", value: "22 platform" },
+        ],
+      },
     },
     {
+      id: "skd",
       label: "SKD Terbit",
       value: summaryStats.totalSKD.value.toLocaleString("id-ID"),
       trend: summaryStats.totalSKD.trend,
@@ -133,8 +154,17 @@ export default function DjpDashboardPage() {
       icon: ShieldCheck,
       color: "text-green-600",
       bar: "bg-green-500",
+      detail: {
+        deskripsi: "Platform yang mendaftar mandiri sebelum terdeteksi sistem dan berhasil lolos verifikasi human-in-the-loop, sehingga mendapat Sertifikat Kepatuhan Dini.",
+        rincian: [
+          { label: "SKD aktif saat ini", value: "312 platform" },
+          { label: "SKD dicabut (gagal evaluasi)", value: "30 platform" },
+          { label: "Menunggu evaluasi berkala", value: "48 platform" },
+        ],
+      },
     },
     {
+      id: "pemungut",
       label: "Pemungut Resmi",
       value: summaryStats.totalPemungut.value.toLocaleString("id-ID"),
       trend: summaryStats.totalPemungut.trend,
@@ -142,6 +172,14 @@ export default function DjpDashboardPage() {
       icon: FileCheck,
       color: "text-teal-600",
       bar: "bg-teal-600",
+      detail: {
+        deskripsi: "Platform yang sudah resmi ditunjuk DJP sebagai pemungut PPN PMSE berdasarkan surat penunjukan resmi, terlepas dari jalur SKD atau deteksi manual.",
+        rincian: [
+          { label: "Ditunjuk lewat jalur SKD", value: "56 platform" },
+          { label: "Ditunjuk lewat deteksi manual", value: "33 platform" },
+          { label: "Rata-rata gap deteksi", value: "2,1 tahun" },
+        ],
+      },
     },
   ]
 
@@ -154,10 +192,16 @@ export default function DjpDashboardPage() {
       <div className="grid grid-cols-4 gap-4 mb-6">
         {kpis.map((kpi) => {
           const Icon = kpi.icon
+          const isExpanded = expandedKpi === kpi.id
           return (
             <div
-              key={kpi.label}
-              className="relative bg-white rounded-xl border overflow-hidden p-5 hover:shadow-md transition-shadow"
+              key={kpi.id}
+              onClick={() => setExpandedKpi(isExpanded ? null : kpi.id)}
+              className={`relative bg-white rounded-xl border overflow-hidden p-5 cursor-pointer transition-all duration-300 ${
+                isExpanded
+                  ? "col-span-4 shadow-lg"
+                  : "hover:shadow-md hover:scale-[1.03]"
+              }`}
             >
               <div className={`absolute top-0 left-0 w-full h-1 ${kpi.bar}`} />
               <div className="flex items-center justify-between mb-3">
@@ -180,6 +224,22 @@ export default function DjpDashboardPage() {
                 {kpi.up === false && "● "}
                 {kpi.trend}
               </p>
+
+              {isExpanded && (
+                <div className="mt-4 pt-4 border-t animate-in fade-in slide-in-from-top-1 duration-300">
+                  <p className="text-sm text-slate-600 mb-3">{kpi.detail.deskripsi}</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {kpi.detail.rincian.map((r) => (
+                      <div key={r.label} className="bg-slate-50 rounded-lg p-3">
+                        <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">
+                          {r.label}
+                        </p>
+                        <p className="text-sm font-bold text-slate-800">{r.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )
         })}
@@ -255,13 +315,11 @@ export default function DjpDashboardPage() {
                                   variant="outline"
                                   disabled={notif !== "idle"}
                                   onClick={() => handleNotif(platform.id)}
-                                  className="transition-all duration-300 w-44 justify-center"
+                                  className="transition-all duration-300 w-44 justify-center gap-2"
                                 >
-                                  {notif === "loading" && (
-                                    <span className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-                                  )}
+                                  {notif === "loading" && <SigapLoader />}
                                   {notif === "idle" && "Kirim Notifikasi Resmi"}
-                                  {notif === "loading" && " Mengirim..."}
+                                  {notif === "loading" && "Mengirim..."}
                                   {notif === "done" && "✓ Terkirim"}
                                 </Button>
 
@@ -269,13 +327,11 @@ export default function DjpDashboardPage() {
                                   size="sm"
                                   disabled={verif !== "idle"}
                                   onClick={() => handleVerif(platform.id)}
-                                  className="transition-all duration-300 w-44 justify-center"
+                                  className="transition-all duration-300 w-44 justify-center gap-2"
                                 >
-                                  {verif === "loading" && (
-                                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                  )}
+                                  {verif === "loading" && <SigapLoader light />}
                                   {verif === "idle" && "Verifikasi Manual"}
-                                  {verif === "loading" && " Memverifikasi..."}
+                                  {verif === "loading" && "Memverifikasi..."}
                                   {verif === "done" && "✓ Terverifikasi"}
                                 </Button>
                               </div>

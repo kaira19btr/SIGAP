@@ -69,7 +69,7 @@ export default function DjpLayout({
     <div className="min-h-screen flex flex-col">
       <Header roleLabel="Otoritas Negara (DJP)" onLogout={handleLogout} />
       <div className="flex flex-1">
-        <aside className="w-64 shrink-0 bg-slate-900 text-white p-6">
+        <aside className="w-64 shrink-0 bg-slate-900 text-white p-6 sticky top-0 self-start h-screen overflow-y-auto">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
             Investigasi
           </p>
