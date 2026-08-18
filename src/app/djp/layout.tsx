@@ -20,6 +20,11 @@ const pageConfig: Record<string, { section: string; title: string; subtitle: str
     title: "Ringkasan Kepatuhan",
     subtitle: "Investigasi dan prioritisasi platform PMSE",
   },
+  "/djp/radar-feed": {
+    section: "Investigasi",
+    title: "Radar Feed",
+    subtitle: "Sinyal masuk secara langsung dari seluruh titik jepit",
+  },
   "/djp/simulasi-deteksi": {
     section: "Investigasi",
     title: "Simulasi Deteksi",
@@ -87,12 +92,23 @@ export default function DjpLayout({
             </li>
             <li>
               <Link
+                href="/djp/radar-feed"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md ${
+                  pathname === "/djp/radar-feed" ? "bg-teal-600 text-white" : "hover:bg-slate-800"
+                }`}
+              >
+                <Radar className="w-4 h-4 shrink-0" />
+                Radar Feed
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/djp/simulasi-deteksi"
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-md ${
                   pathname === "/djp/simulasi-deteksi" ? "bg-teal-600 text-white" : "hover:bg-slate-800"
                 }`}
               >
-                <Radar className="w-4 h-4 shrink-0" />
+                <Info className="w-4 h-4 shrink-0" />
                 Simulasi Deteksi
               </Link>
             </li>

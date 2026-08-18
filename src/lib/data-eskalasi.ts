@@ -1403,3 +1403,29 @@ export function waktuInfoUntukInstitusi(sisaHari: number, gaya: GayaInstitusi) {
 
   return sisaWaktuInfo(sisaHari)
 }
+
+export function narasiLengkap(item: KasusEskalasi): string {
+  const gapText = item.estimasiGap.startsWith("Rp0")
+    ? item.estimasiGap
+    : `sekitar ${item.estimasiGap}`
+
+  switch (item.institusi) {
+    case "Kominfo":
+      return `${item.platform} belum terdaftar sebagai Penyelenggara Sistem Elektronik (PSE) meski confidence score RADAR PMSE mencapai ${item.confidenceScore}, dipicu sinyal dari ${item.sumberSinyal}. ${item.catatan} Estimasi gap PPN yang belum tergarap diperkirakan ${gapText} sejak eskalasi diajukan ${item.dieskalasi}. Jika masa tenggang terlampaui tanpa respons, Kominfo berwenang mengajukan pemblokiran PSE sebagai upaya terakhir sesuai PP 71/2019 — surat referensi ${item.nomorSurat}, ditangani ${item.petugasDjp}.`
+
+    case "App Store / Play Store":
+      return `${item.platform} (ID aplikasi: ${item.detailTambahan}) terdeteksi dengan confidence score ${item.confidenceScore} dari sinyal ${item.sumberSinyal}. ${item.catatan} Estimasi PPN yang belum terpungut mencapai ${gapText}. Sesuai leverage point IAP routing, App Store/Play Store dapat mengaktifkan Routing IAP Wajib — begitu aktif, seluruh transaksi otomatis dialihkan lewat StoreKit/Play Billing dan PPN langsung terpungut oleh Apple/Google sebagai pemungut resmi. Referensi: ${item.nomorSurat}, ${item.petugasDjp}.`
+
+    case "PSP":
+      return `${item.platform} (${item.detailTambahan}) tercatat memiliki volume transaksi signifikan dari sinyal ${item.sumberSinyal}, dengan confidence score ${item.confidenceScore}. ${item.catatan} Estimasi gap PPN diperkirakan ${gapText}. PSP domestik dapat memproses penahanan/eskrow settlement — dana ditahan sementara tanpa mengganggu transaksi konsumen, sampai platform menyelesaikan kewajiban pendaftarannya. Referensi: ${item.nomorSurat}, ${item.petugasDjp}.`
+
+    case "Jaringan Kartu Internasional":
+      return `Transaksi ${item.platform} diproses langsung lewat ${item.detailTambahan}, tanpa melalui PSP domestik — confidence score ${item.confidenceScore} dari sinyal ${item.sumberSinyal}. ${item.catatan} Karena berada di luar jangkauan eskrow domestik, titik jepit ini berfungsi sebagai jalur pemantauan/sinyal tambahan bagi RADAR PMSE, bukan penegakan langsung — mendukung koordinasi jangka menengah-panjang dengan jaringan kartu global. Referensi: ${item.nomorSurat}, ${item.petugasDjp}.`
+
+    case "Platform Iklan Digital":
+      return `${item.platform} terpantau aktif beriklan lewat ${item.sumberSinyal} menyasar pengguna Indonesia — confidence score ${item.confidenceScore}, status: ${item.detailTambahan}. ${item.catatan} Sebagai soft leverage, tindak lanjutnya berupa insentif trusted-advertiser bagi platform yang kooperatif, atau pembatasan akses fitur premium iklan bagi yang belum merespons — berjalan paralel sambil proses registrasi berlangsung di titik jepit lain. Referensi: ${item.nomorSurat}, ${item.petugasDjp}.`
+
+    default:
+      return item.catatan
+  }
+}

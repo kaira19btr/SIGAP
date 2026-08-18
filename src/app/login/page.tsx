@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, Building2, Radar, Network, Lock, IdCard, KeyRound, Globe, CheckCircle2, Loader2, Landmark, Smartphone, CreditCard, Megaphone } from "lucide-react";
+import { Shield, Building2, Radar, Network, Lock, IdCard, KeyRound, Globe, CheckCircle2, Loader2, Landmark, Smartphone, CreditCard, Megaphone, Users } from "lucide-react";
 import NetworkBackground from "@/components/NetworkBackground";
 
 const roles = [
   { id: "djp", name: "Otoritas Negara (DJP)", nameEn: "State Authority (DJP)", icon: Shield, href: "/djp/dashboard" },
   { id: "mitra", name: "Mitra Platform", nameEn: "Platform Partner", icon: Building2, href: "/mitra/dashboard" },
-  { id: "radar-feed", name: "Radar Feed", nameEn: "Radar Feed", icon: Radar, href: "/radar-feed/dashboard" },
   { id: "gateway", name: "Gateway", nameEn: "Gateway", icon: Network, href: "/gateway/antrian-tindak-lanjut" },
+  { id: "portal-publik", name: "Portal Publik", nameEn: "Public Portal", icon: Users, href: "/portal-publik" },
 ];
 
 const contohPlatform = [
@@ -138,7 +138,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-4 gap-3 mb-6">
           {roles.map((role) => {
             const Icon = role.icon;
             const isSelected = selected.id === role.id;
