@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Globe2, Smartphone, Landmark, CheckCircle2, ChevronDown, Clock, Gauge, Wallet, Search, CreditCard, Megaphone, AlertTriangle } from "lucide-react"
+import { Globe2, Smartphone, Landmark, CheckCircle2, ChevronDown, Clock, Gauge, Wallet, CreditCard, Megaphone } from "lucide-react"
 import {
   Institusi,
   KasusEskalasi,
@@ -22,20 +22,21 @@ const institusiIcon: Record<Institusi, typeof Globe2> = {
   "Platform Iklan Digital": Megaphone,
 }
 
-type RingkasanKey = "menunggu" | "terlambat" | "total" | "bi"
-
-export default function AntrianTindakLanjutPage() {
+export default function TindakLanjutPage() {
   const [institusiAktif, setInstitusiAktif] = useState<Institusi>("Kominfo")
-  const [antrian] = useState<KasusEskalasi[]>(antrianAwal)
+  const [diambil, setDiambil] = useState<string[]>([])
   const [dikonfirmasi, setDikonfirmasi] = useState<string[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [ringkasanAktif, setRingkasanAktif] = useState<RingkasanKey | null>(null)
-  const [pencarian, setPencarian] = useState("")
+  const [ringkasanBiAktif, setRingkasanBiAktif] = useState(false)
 
   useEffect(function () {
     const tersimpanInstitusi = localStorage.getItem("sigap_institusi") as Institusi | null
     if (tersimpanInstitusi && institusiConfig[tersimpanInstitusi]) {
       setInstitusiAktif(tersimpanInstitusi)
+    }
+    const tersimpanDiambil = localStorage.getItem("sigap_diambil")
+    if (tersimpanDiambil) {
+      setDiambil(JSON.parse(tersimpanDiambil))
     }
     const tersimpanKonfirmasi = localStorage.getItem("sigap_dikonfirmasi")
     if (tersimpanKonfirmasi) {
@@ -51,176 +52,62 @@ export default function AntrianTindakLanjutPage() {
     })
   }
 
-  const antrianInstitusiIni = antrian.filter(function (a) {
-    return a.institusi === institusiAktif
-  })
-  const sisaAntrian = antrianInstitusiIni
+  const config = institusiConfig[institusiAktif]
+  const Icon = institusiIcon[institusiAktif]
+
+  const sedangDitangani: KasusEskalasi[] = antrianAwal
     .filter(function (a) {
-      return dikonfirmasi.indexOf(a.id) === -1
+      return a.institusi === institusiAktif
     })
     .filter(function (a) {
-      const kata = pencarian.toLowerCase()
-      return (
-        a.platform.toLowerCase().includes(kata) ||
-        a.domisili.toLowerCase().includes(kata)
-      )
+      return diambil.indexOf(a.id) !== -1 && dikonfirmasi.indexOf(a.id) === -1
     })
     .sort(function (a, b) {
       return a.sisaHari - b.sisaHari
     })
 
-  const config = institusiConfig[institusiAktif]
-  const Icon = institusiIcon[institusiAktif]
-  const terlambatList = sisaAntrian.filter(function (a) {
-    return a.sisaHari < 0
-  })
-  const jumlahTerlambat = terlambatList.length
-
-  function toggleRingkasan(key: RingkasanKey) {
-    setRingkasanAktif(function (prev) {
-      return prev === key ? null : key
-    })
-  }
-
-  const ringkasanConfig: Record<Exclude<RingkasanKey, "bi">, { label: string; items: KasusEskalasi[]; emptyText: string }> = {
-    menunggu: {
-      label: "Menunggu Tindakan",
-      items: sisaAntrian,
-      emptyText: "Tidak ada platform yang menunggu tindakan.",
-    },
-    terlambat: {
-      label: "Sudah Lewat Batas Waktu",
-      items: terlambatList,
-      emptyText: "Tidak ada platform yang lewat batas waktu.",
-    },
-    total: {
-      label: `Total Eskalasi ke ${institusiAktif}`,
-      items: antrianInstitusiIni,
-      emptyText: "Belum ada eskalasi untuk institusi ini.",
-    },
-  }
-
   const tampilkanKpiBi = institusiAktif === "PSP" || institusiAktif === "Jaringan Kartu Internasional"
 
   return (
     <div>
-      <div className={`grid gap-4 mb-4 ${tampilkanKpiBi ? "grid-cols-4" : "grid-cols-3"}`}>
-        <Card
-          onClick={() => toggleRingkasan("menunggu")}
-          className={`relative overflow-hidden p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 border-amber-200 cursor-pointer transition-all duration-200 ${
-            ringkasanAktif === "menunggu" ? "ring-2 ring-amber-400 shadow-md" : "hover:shadow-md hover:-translate-y-0.5"
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
-              <Clock className="w-4 h-4 text-white" />
-            </div>
-            <p className="text-xs font-medium text-amber-700">Menunggu Tindakan</p>
-          </div>
-          <p className="text-3xl font-bold text-amber-600 tabular-nums">{sisaAntrian.length}</p>
-          <div className="mt-2 h-1 rounded-full bg-amber-200/60 overflow-hidden">
-            <div
-              className="h-full bg-amber-500 rounded-full transition-all duration-500"
-              style={{
-                width: antrianInstitusiIni.length
-                  ? `${(sisaAntrian.length / antrianInstitusiIni.length) * 100}%`
-                  : "0%",
-              }}
-            />
-          </div>
-        </Card>
-
-        <Card
-          onClick={() => toggleRingkasan("terlambat")}
-          className={`relative overflow-hidden p-4 bg-gradient-to-br from-red-50 to-red-100/50 border-red-200 cursor-pointer transition-all duration-200 ${
-            ringkasanAktif === "terlambat" ? "ring-2 ring-red-400 shadow-md" : "hover:shadow-md hover:-translate-y-0.5"
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-4 h-4 text-white" />
-            </div>
-            <p className="text-xs font-medium text-red-700">Sudah Lewat Batas Waktu</p>
-          </div>
-          <p className="text-3xl font-bold text-red-600 tabular-nums">{jumlahTerlambat}</p>
-          <div className="mt-2 h-1 rounded-full bg-red-200/60 overflow-hidden">
-            <div
-              className="h-full bg-red-500 rounded-full transition-all duration-500"
-              style={{
-                width: antrianInstitusiIni.length
-                  ? `${(jumlahTerlambat / antrianInstitusiIni.length) * 100}%`
-                  : "0%",
-              }}
-            />
-          </div>
-        </Card>
-
-        <Card
-          onClick={() => toggleRingkasan("total")}
-          className={`relative overflow-hidden p-4 bg-gradient-to-br from-slate-50 to-slate-100/50 border-slate-200 cursor-pointer transition-all duration-200 ${
-            ringkasanAktif === "total" ? "ring-2 ring-slate-400 shadow-md" : "hover:shadow-md hover:-translate-y-0.5"
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
-              <Icon className="w-4 h-4 text-white" />
-            </div>
-            <p className="text-xs font-medium text-slate-500">Total Eskalasi ke {institusiAktif}</p>
-          </div>
-          <p className="text-3xl font-bold text-slate-800 tabular-nums">{antrianInstitusiIni.length}</p>
-          <div className="mt-2 h-1 rounded-full bg-slate-200/60 overflow-hidden">
-            <div className="h-full bg-slate-700 rounded-full w-full" />
-          </div>
+      <div className={`grid gap-4 mb-6 ${tampilkanKpiBi ? "grid-cols-2" : "grid-cols-1"}`}>
+        <Card className="relative overflow-hidden p-4 bg-gradient-to-br from-teal-50 to-teal-100/50 border-teal-200">
+          <p className="text-xs font-medium text-teal-700 mb-1">Sedang Ditangani</p>
+          <p className="text-3xl font-bold text-teal-600 tabular-nums">{sedangDitangani.length}</p>
         </Card>
 
         {institusiAktif === "PSP" && (
           <Card
-            onClick={() => toggleRingkasan("bi")}
+            onClick={() => setRingkasanBiAktif(!ringkasanBiAktif)}
             className={`relative overflow-hidden p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200 cursor-pointer transition-all duration-200 ${
-              ringkasanAktif === "bi" ? "ring-2 ring-blue-400 shadow-md" : "hover:shadow-md hover:-translate-y-0.5"
+              ringkasanBiAktif ? "ring-2 ring-blue-400 shadow-md" : "hover:shadow-md"
             }`}
           >
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
-                <Landmark className="w-4 h-4 text-white" />
-              </div>
+            <div className="flex items-center gap-2 mb-2">
+              <Landmark className="w-4 h-4 text-blue-600" />
               <p className="text-xs font-medium text-blue-700">Diawasi BI</p>
             </div>
-            <p className="text-3xl font-bold text-blue-600 tabular-nums">{antrianInstitusiIni.length}</p>
-            <div className="mt-2 h-1 rounded-full bg-blue-200/60 overflow-hidden">
-              <div className="h-full bg-blue-500 rounded-full w-full" />
-            </div>
+            <p className="text-3xl font-bold text-blue-600 tabular-nums">{sedangDitangani.length}</p>
           </Card>
         )}
 
         {institusiAktif === "Jaringan Kartu Internasional" && (
-          <Card className="relative overflow-hidden p-4 bg-gradient-to-br from-sky-50 to-sky-100/50 border-sky-200">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center shrink-0">
-                <Landmark className="w-4 h-4 text-white" />
-              </div>
+          <Card
+            onClick={() => setRingkasanBiAktif(!ringkasanBiAktif)}
+            className={`relative overflow-hidden p-4 bg-gradient-to-br from-sky-50 to-sky-100/50 border-sky-200 cursor-pointer transition-all duration-200 ${
+              ringkasanBiAktif ? "ring-2 ring-sky-400 shadow-md" : "hover:shadow-md"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Landmark className="w-4 h-4 text-sky-600" />
               <p className="text-xs font-medium text-sky-700">Dipantau BI (LLD)</p>
             </div>
-            <p className="text-3xl font-bold text-sky-600 tabular-nums">{antrianInstitusiIni.length}</p>
-            <div className="mt-2 h-1 rounded-full bg-sky-200/60 overflow-hidden">
-              <div className="h-full bg-sky-500 rounded-full w-full" />
-            </div>
+            <p className="text-3xl font-bold text-sky-600 tabular-nums">{sedangDitangani.length}</p>
           </Card>
         )}
       </div>
 
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          type="text"
-          value={pencarian}
-          onChange={(e) => setPencarian(e.target.value)}
-          placeholder="Cari nama platform atau domisili..."
-          className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-        />
-      </div>
-
-      {ringkasanAktif === "bi" && (
+      {ringkasanBiAktif && institusiAktif === "PSP" && (
         <Card className="p-4 mb-6 bg-blue-50/50 border-blue-200">
           <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3 flex items-center gap-1.5">
             <Landmark className="w-3.5 h-3.5" /> Peran Bank Indonesia dalam Pengawasan PSP
@@ -230,9 +117,7 @@ export default function AntrianTindakLanjutPage() {
               return profil.perans.map(function (peran) {
                 return (
                   <div key={peran.dimensi} className="flex gap-3">
-                    <span className="text-xs font-semibold text-blue-600 shrink-0 w-20">
-                      {peran.dimensi}
-                    </span>
+                    <span className="text-xs font-semibold text-blue-600 shrink-0 w-20">{peran.dimensi}</span>
                     <p className="text-sm text-slate-600 leading-relaxed">{peran.deskripsi}</p>
                   </div>
                 )
@@ -242,44 +127,16 @@ export default function AntrianTindakLanjutPage() {
         </Card>
       )}
 
-      {ringkasanAktif && ringkasanAktif !== "bi" && (
-        <Card className="p-4 mb-6 bg-white">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
-            {ringkasanConfig[ringkasanAktif].label}
-          </p>
-          {ringkasanConfig[ringkasanAktif].items.length === 0 ? (
-            <p className="text-sm text-slate-400">{ringkasanConfig[ringkasanAktif].emptyText}</p>
-          ) : (
-            <div className="space-y-2">
-              {ringkasanConfig[ringkasanAktif].items.map(function (item) {
-                const waktu = sisaWaktuInfo(item.sisaHari)
-                return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between gap-3 py-2 border-b border-slate-100 last:border-0"
-                  >
-                    <p className="text-sm text-slate-700">
-                      {item.platform} <span className="text-slate-400">· {item.domisili}</span>
-                    </p>
-                    <span className={`text-xs font-semibold ${waktu.color}`}>{waktu.label}</span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </Card>
-      )}
-
-      {sisaAntrian.length === 0 ? (
+      {sedangDitangani.length === 0 ? (
         <Card className="p-10 text-center">
           <CheckCircle2 className="w-8 h-8 text-teal-500 mx-auto mb-3" />
           <p className="text-sm text-slate-500">
-            Tidak ada kasus yang menunggu tindakan {institusiAktif} saat ini.
+            Belum ada kasus yang diambil dari antrian {institusiAktif}. Ambil kasus dari halaman Antrian dulu.
           </p>
         </Card>
       ) : (
         <div className="space-y-3">
-          {sisaAntrian.map(function (item) {
+          {sedangDitangani.map(function (item) {
             const waktu = sisaWaktuInfo(item.sisaHari)
             const isExpanded = expandedId === item.id
             return (
@@ -329,9 +186,7 @@ export default function AntrianTindakLanjutPage() {
                         {waktu.label}
                       </span>
                       <ChevronDown
-                        className={`w-4 h-4 text-slate-400 transition-transform ${
-                          isExpanded ? "rotate-180" : ""
-                        }`}
+                        className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                       />
                     </div>
                   </div>
@@ -354,9 +209,7 @@ export default function AntrianTindakLanjutPage() {
                           <p className="text-sm font-bold text-red-600">{item.estimasiGap}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">
-                            Sumber Sinyal
-                          </p>
+                          <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">Sumber Sinyal</p>
                           <p className="text-sm font-bold text-slate-800">{item.sumberSinyal}</p>
                         </div>
                         <div>
@@ -381,9 +234,7 @@ export default function AntrianTindakLanjutPage() {
                             {peranBiUntukKasus(item).map(function (peran) {
                               return (
                                 <div key={peran.dimensi} className="flex gap-3">
-                                  <span className="text-xs font-semibold text-blue-600 shrink-0 w-20">
-                                    {peran.dimensi}
-                                  </span>
+                                  <span className="text-xs font-semibold text-blue-600 shrink-0 w-20">{peran.dimensi}</span>
                                   <p className="text-xs text-slate-600 leading-relaxed">{peran.deskripsi}</p>
                                 </div>
                               )
@@ -401,9 +252,7 @@ export default function AntrianTindakLanjutPage() {
                             {peranBiUntukKasusKartu(item).map(function (peran) {
                               return (
                                 <div key={peran.dimensi} className="flex gap-3">
-                                  <span className="text-xs font-semibold text-sky-600 shrink-0 w-20">
-                                    {peran.dimensi}
-                                  </span>
+                                  <span className="text-xs font-semibold text-sky-600 shrink-0 w-20">{peran.dimensi}</span>
                                   <p className="text-xs text-slate-600 leading-relaxed">{peran.deskripsi}</p>
                                 </div>
                               )

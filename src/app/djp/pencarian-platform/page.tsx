@@ -1,10 +1,25 @@
 "use client"
 
-import { useState } from "react"
-import { mockPlatforms, summaryStats } from "@/lib/mock-data"
-import { Card } from "@/components/ui/card"
+import { useState, useEffect, Fragment } from "react"
+import { mockPlatforms, summaryStats, extraPlatforms } from "@/lib/mock-data"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import SigapLoader from "@/components/SigapLoader"
 import {
   Search,
   Globe2,
@@ -41,6 +56,15 @@ const faktorPelaporan: Record<string, number> = {
   "Belum Terdaftar": 0,
 }
 
+const rowColors = [
+  "border-l-purple-400",
+  "border-l-orange-400",
+  "border-l-blue-400",
+  "border-l-pink-400",
+  "border-l-yellow-400",
+  "border-l-indigo-400",
+]
+
 function formatRupiah(value: number) {
   if (value >= 1_000_000_000) {
     return `Rp${(value / 1_000_000_000).toLocaleString("id-ID", { maximumFractionDigits: 1 })} M`
@@ -73,6 +97,34 @@ export default function PencarianPlatformPage() {
   const [query, setQuery] = useState("")
   const [domisiliFilter, setDomisiliFilter] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null)
+  const [notifState, setNotifState] = useState<Record<string, "idle" | "loading" | "done">>({})
+  const [verifState, setVerifState] = useState<Record<string, "idle" | "loading" | "done">>({})
+  const [showAllModal, setShowAllModal] = useState(false)
+  const [loadedExtra, setLoadedExtra] = useState(false)
+
+  function handleNotif(id: string) {
+    setNotifState((prev) => ({ ...prev, [id]: "loading" }))
+    setTimeout(() => {
+      setNotifState((prev) => ({ ...prev, [id]: "done" }))
+    }, 1200)
+  }
+
+  function handleVerif(id: string) {
+    setVerifState((prev) => ({ ...prev, [id]: "loading" }))
+    setTimeout(() => {
+      setVerifState((prev) => ({ ...prev, [id]: "done" }))
+    }, 1200)
+  }
+
+  useEffect(() => {
+    if (showAllModal) {
+      setLoadedExtra(false)
+      const timer = setTimeout(() => setLoadedExtra(true), 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [showAllModal])
 
   const daftarDomisili = Array.from(
     new Set(mockPlatforms.map((p) => p.domisili))
@@ -419,6 +471,198 @@ export default function PencarianPlatformPage() {
               ))}
           </div>
         </>
+      )}
+
+      <Card className="mt-10">
+        <CardHeader>
+          <CardTitle>Daftar Platform Terpantau</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nama Platform</TableHead>
+                <TableHead>Domisili</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Confidence Score</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockPlatforms.map((platform, index) => {
+                const notif = notifState[platform.id] ?? "idle"
+                const verif = verifState[platform.id] ?? "idle"
+
+                return (
+                  <Fragment key={platform.id}>
+                    <TableRow
+                      onClick={() =>
+                        setExpandedRowId(
+                          expandedRowId === platform.id ? null : platform.id
+                        )
+                      }
+                      className={`cursor-pointer border-l-4 ${rowColors[index % rowColors.length]}`}
+                    >
+                      <TableCell>{platform.nama}</TableCell>
+                      <TableCell>{platform.domisili}</TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(platform.status)}>
+                          {platform.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{platform.confidenceScore}</TableCell>
+                    </TableRow>
+                    {expandedRowId === platform.id && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="bg-slate-50">
+                          <div className="flex justify-between items-center py-3 gap-6">
+                            <div className="text-sm text-slate-600">
+                              <p>Traffic tahunan: {platform.traffic.toLocaleString("id-ID")}</p>
+                              <p>Estimasi transaksi: Rp{platform.estimasiTransaksi.toLocaleString("id-ID")}</p>
+                              {(platform.traffic >= 12000 || platform.estimasiTransaksi >= 600000000) && (
+                                <p className="mt-2 font-semibold text-red-600">
+                                  ⚠ Sudah mencapai ambang batas (threshold)
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-6">
+                              <div
+                                className="relative w-16 h-16 rounded-full flex items-center justify-center"
+                                style={{
+                                  background: `conic-gradient(#0d9488 ${platform.confidenceScore * 3.6}deg, #e2e8f0 0deg)`,
+                                }}
+                              >
+                                <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-xs font-semibold text-slate-700">
+                                  {platform.confidenceScore}%
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={notif !== "idle"}
+                                  onClick={() => handleNotif(platform.id)}
+                                  className="transition-all duration-300 w-44 justify-center gap-2"
+                                >
+                                  {notif === "loading" && <SigapLoader />}
+                                  {notif === "idle" && "Kirim Notifikasi Resmi"}
+                                  {notif === "loading" && "Mengirim..."}
+                                  {notif === "done" && "✓ Terkirim"}
+                                </Button>
+
+                                <Button
+                                  size="sm"
+                                  disabled={verif !== "idle"}
+                                  onClick={() => handleVerif(platform.id)}
+                                  className="transition-all duration-300 w-44 justify-center gap-2"
+                                >
+                                  {verif === "loading" && <SigapLoader light />}
+                                  {verif === "idle" && "Verifikasi Manual"}
+                                  {verif === "loading" && "Memverifikasi..."}
+                                  {verif === "done" && "✓ Terverifikasi"}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
+                )
+              })}
+            </TableBody>
+          </Table>
+
+          <div className="flex items-center justify-between px-1 pt-4 text-sm text-slate-500">
+            <p>
+              Menampilkan {mockPlatforms.length} dari{" "}
+              <span className="font-semibold text-slate-700">
+                {summaryStats.totalPlatform.value.toLocaleString("id-ID")}
+              </span>{" "}
+              platform terpantau
+            </p>
+            <button
+              onClick={() => setShowAllModal(true)}
+              className="text-teal-600 font-medium hover:underline"
+            >
+              Lihat semua platform →
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {showAllModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200"
+          onClick={() => setShowAllModal(false)}
+        >
+          <div
+            className="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <div>
+                <h3 className="font-bold text-slate-800">Seluruh Platform Terpantau</h3>
+                <p className="text-xs text-slate-500">
+                  {summaryStats.totalPlatform.value.toLocaleString("id-ID")} platform terdeteksi sistem
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAllModal(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 divide-y">
+              {mockPlatforms.map((platform, index) => (
+                <div
+                  key={platform.id}
+                  className={`flex items-center justify-between px-6 py-3 border-l-4 ${rowColors[index % rowColors.length]}`}
+                >
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">{platform.nama}</p>
+                    <p className="text-xs text-slate-500">{platform.domisili}</p>
+                  </div>
+                  <Badge className={getStatusColor(platform.status)}>
+                    {platform.status}
+                  </Badge>
+                </div>
+              ))}
+
+              {loadedExtra
+                ? extraPlatforms.map((platform, index) => (
+                    <div
+                      key={platform.id}
+                      className={`flex items-center justify-between px-6 py-3 border-l-4 ${rowColors[index % rowColors.length]} animate-in fade-in slide-in-from-bottom-1 duration-300`}
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{platform.nama}</p>
+                        <p className="text-xs text-slate-500">{platform.domisili}</p>
+                      </div>
+                      <Badge className={getStatusColor(platform.status)}>
+                        {platform.status}
+                      </Badge>
+                    </div>
+                  ))
+                : Array.from({ length: 6 }).map((_, i) => (
+                    <div key={`skeleton-${i}`} className="flex items-center justify-between px-6 py-3 animate-pulse">
+                      <div className="space-y-2">
+                        <div className="h-3 w-32 bg-slate-200 rounded" />
+                        <div className="h-2 w-20 bg-slate-100 rounded" />
+                      </div>
+                      <div className="h-5 w-16 bg-slate-100 rounded-full" />
+                    </div>
+                  ))}
+            </div>
+
+            <div className="px-6 py-3 border-t text-center text-xs text-slate-400">
+              Memuat sebagian dari {summaryStats.totalPlatform.value.toLocaleString("id-ID")} platform...
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
+import { SidebarUserBadge } from "@/components/sidebar-user-badge"
 import {
   RefreshCw,
   ClipboardList,
@@ -65,6 +67,7 @@ export default function DjpLayout({
   const pathname = usePathname()
   const router = useRouter()
   const page = pageConfig[pathname] ?? pageConfig["/djp/dashboard"]
+  const [userName] = useState("Ahmad Fauzi") // TODO: ganti dari data login asli
 
   const handleLogout = () => {
     router.push("/login")
@@ -74,7 +77,7 @@ export default function DjpLayout({
     <div className="min-h-screen flex flex-col">
       <Header roleLabel="Otoritas Negara (DJP)" onLogout={handleLogout} />
       <div className="flex flex-1">
-        <aside className="w-64 shrink-0 bg-slate-900 text-white p-6 sticky top-0 self-start h-screen overflow-y-auto">
+        <aside className="w-64 shrink-0 bg-slate-900 text-white p-6 sticky top-0 self-start h-screen overflow-y-auto flex flex-col">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
             Investigasi
           </p>
@@ -173,6 +176,8 @@ export default function DjpLayout({
               </Link>
             </li>
           </ul>
+
+          <SidebarUserBadge name={userName} role="Pemeriksa Pajak · DJP" colorClass="bg-teal-600" />
         </aside>
         <main className="flex-1 bg-gray-50">
           <div className="px-8 py-4 bg-white border-b flex items-center justify-between">

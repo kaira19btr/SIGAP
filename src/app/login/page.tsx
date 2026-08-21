@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Shield, Building2, Radar, Network, Lock, IdCard, KeyRound, Globe, CheckCircle2, Loader2, Landmark, Smartphone, CreditCard, Megaphone, Users } from "lucide-react";
+import { Shield, Building2, Network, Lock, IdCard, KeyRound, Globe, CheckCircle2, Loader2, Landmark, Smartphone, CreditCard, Megaphone, Users } from "lucide-react";
 import NetworkBackground from "@/components/NetworkBackground";
 
 const roles = [
@@ -40,6 +40,7 @@ export default function LoginPage() {
 
   const isMitra = selected.id === "mitra";
   const isGateway = selected.id === "gateway";
+  const isPortalPublik = selected.id === "portal-publik";
   const isBusy = stage !== "idle";
 
   const handleLogin = () => {
@@ -253,34 +254,52 @@ export default function LoginPage() {
           </div>
         )}
 
-        <div className="space-y-4">
-          <div>
-            <label className="flex items-center gap-2 text-sm text-neutral-300 mb-0.5">
-              <IdCard className="w-4 h-4" />
-              NIK / ID Akses
-            </label>
-            <p className="text-[10px] text-neutral-500 mb-1.5 ml-6">NIK / Access ID</p>
-            <input
-              type="text"
-              disabled={isBusy}
-              placeholder="Ketik apapun untuk akses prototipe"
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-emerald-500 transition disabled:opacity-50"
-            />
+        {isPortalPublik && (
+          <div className="mb-4 flex items-start gap-3 bg-sky-500/10 border border-sky-500/20 rounded-xl px-4 py-3">
+            <span className="text-lg">🌐</span>
+            <div>
+              <p className="text-sky-300 text-sm">
+                Portal Publik dapat diakses langsung tanpa NIK maupun kata sandi.
+              </p>
+              <p className="text-sky-500/70 text-xs italic mt-1">
+                Public Portal can be accessed directly without an ID or password.
+              </p>
+            </div>
           </div>
+        )}
 
-          <div>
-            <label className="flex items-center gap-2 text-sm text-neutral-300 mb-0.5">
-              <KeyRound className="w-4 h-4" />
-              Kata Sandi
-            </label>
-            <p className="text-[10px] text-neutral-500 mb-1.5 ml-6">Password</p>
-            <input
-              type="password"
-              disabled={isBusy}
-              placeholder="••••••••••"
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-emerald-500 transition disabled:opacity-50"
-            />
-          </div>
+        <div className="space-y-4">
+          {!isPortalPublik && (
+            <>
+              <div>
+                <label className="flex items-center gap-2 text-sm text-neutral-300 mb-0.5">
+                  <IdCard className="w-4 h-4" />
+                  NIK / ID Akses
+                </label>
+                <p className="text-[10px] text-neutral-500 mb-1.5 ml-6">NIK / Access ID</p>
+                <input
+                  type="text"
+                  disabled={isBusy}
+                  placeholder="Ketik apapun untuk akses prototipe"
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-emerald-500 transition disabled:opacity-50"
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm text-neutral-300 mb-0.5">
+                  <KeyRound className="w-4 h-4" />
+                  Kata Sandi
+                </label>
+                <p className="text-[10px] text-neutral-500 mb-1.5 ml-6">Password</p>
+                <input
+                  type="password"
+                  disabled={isBusy}
+                  placeholder="••••••••••"
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-emerald-500 transition disabled:opacity-50"
+                />
+              </div>
+            </>
+          )}
 
           <button
             onClick={handleLogin}

@@ -1,52 +1,39 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { mockPlatforms, summaryStats, extraPlatforms } from "@/lib/mock-data"
-import { Fragment } from "react"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { useState } from "react"
+import { summaryStats } from "@/lib/mock-data"
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
 } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Users, Flag, ShieldCheck, FileCheck, Landmark } from "lucide-react"
-import SigapLoader from "@/components/SigapLoader"
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts"
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case "Red Flag":
-      return "bg-red-100 text-red-700 hover:bg-red-100"
-    case "SKD":
-      return "bg-green-100 text-green-700 hover:bg-green-100"
-    case "Pemungut Resmi":
-      return "bg-teal-100 text-teal-700 hover:bg-teal-100"
-    case "Belum Terdaftar":
-      return "bg-gray-100 text-gray-700 hover:bg-gray-100"
-    default:
-      return ""
-  }
-}
-
-const rowColors = [
-  "border-l-purple-400",
-  "border-l-orange-400",
-  "border-l-blue-400",
-  "border-l-pink-400",
-  "border-l-yellow-400",
-  "border-l-indigo-400",
+const trendData = [
+  { tahun: "2022", platform: 320, kepatuhan: 42, pendapatan: 1.2 },
+  { tahun: "2023", platform: 480, kepatuhan: 51, pendapatan: 2.1 },
+  { tahun: "2024", platform: 650, kepatuhan: 58, pendapatan: 3.4 },
+  { tahun: "2025", platform: 920, kepatuhan: 66, pendapatan: 5.6 },
+  { tahun: "2026", platform: 1284, kepatuhan: 74, pendapatan: 8.8 },
 ]
 
-type ActionState = "idle" | "loading" | "done"
+function formatTooltip(value: number, name: string) {
+  if (name === "Pertumbuhan Platform") return [value.toLocaleString("id-ID") + " platform", name]
+  if (name === "Tingkat Kepatuhan") return [`${value}%`, name]
+  if (name === "Pendapatan Pajak PMSE") return [`Rp${value} T`, name]
+  return [value, name]
+}
 
 const anomaliList = [
   {
@@ -79,34 +66,7 @@ const anomaliList = [
 ]
 
 export default function DjpDashboardPage() {
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [expandedKpi, setExpandedKpi] = useState<string | null>(null)
-  const [notifState, setNotifState] = useState<Record<string, ActionState>>({})
-  const [verifState, setVerifState] = useState<Record<string, ActionState>>({})
-  const [showAllModal, setShowAllModal] = useState(false)
-  const [loadedExtra, setLoadedExtra] = useState(false)
-
-  function handleNotif(id: string) {
-    setNotifState((prev) => ({ ...prev, [id]: "loading" }))
-    setTimeout(() => {
-      setNotifState((prev) => ({ ...prev, [id]: "done" }))
-    }, 1200)
-  }
-
-  function handleVerif(id: string) {
-    setVerifState((prev) => ({ ...prev, [id]: "loading" }))
-    setTimeout(() => {
-      setVerifState((prev) => ({ ...prev, [id]: "done" }))
-    }, 1200)
-  }
-
-  useEffect(() => {
-    if (showAllModal) {
-      setLoadedExtra(false)
-      const timer = setTimeout(() => setLoadedExtra(true), 1500)
-      return () => clearTimeout(timer)
-    }
-  }, [showAllModal])
 
   const kpis = [
     {
@@ -247,129 +207,76 @@ export default function DjpDashboardPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Daftar Platform Terpantau</CardTitle>
+          <CardTitle>Tren 5 Tahun: Pertumbuhan Platform, Kepatuhan & Pendapatan Pajak</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nama Platform</TableHead>
-                <TableHead>Domisili</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Confidence Score</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mockPlatforms.map((platform, index) => {
-                const notif = notifState[platform.id] ?? "idle"
-                const verif = verifState[platform.id] ?? "idle"
-
-                return (
-                  <Fragment key={platform.id}>
-                    <TableRow
-                      onClick={() =>
-                        setSelectedId(
-                          selectedId === platform.id ? null : platform.id
-                        )
-                      }
-                      className={`cursor-pointer border-l-4 ${rowColors[index % rowColors.length]}`}
-                    >
-                      <TableCell>{platform.nama}</TableCell>
-                      <TableCell>{platform.domisili}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(platform.status)}>
-                          {platform.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{platform.confidenceScore}</TableCell>
-                    </TableRow>
-                    {selectedId === platform.id && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="bg-slate-50">
-                          <div className="flex justify-between items-center py-3 gap-6">
-                            <div className="text-sm text-slate-600">
-                              <p>Traffic tahunan: {platform.traffic.toLocaleString("id-ID")}</p>
-                              <p>Estimasi transaksi: Rp{platform.estimasiTransaksi.toLocaleString("id-ID")}</p>
-                              {(platform.traffic >= 12000 || platform.estimasiTransaksi >= 600000000) && (
-                                <p className="mt-2 font-semibold text-red-600">
-                                  ⚠ Sudah mencapai ambang batas (threshold)
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-6">
-                              <div
-                                className="relative w-16 h-16 rounded-full flex items-center justify-center"
-                                style={{
-                                  background: `conic-gradient(#0d9488 ${platform.confidenceScore * 3.6}deg, #e2e8f0 0deg)`,
-                                }}
-                              >
-                                <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-xs font-semibold text-slate-700">
-                                  {platform.confidenceScore}%
-                                </div>
-                              </div>
-
-                              <div className="flex flex-col gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  disabled={notif !== "idle"}
-                                  onClick={() => handleNotif(platform.id)}
-                                  className="transition-all duration-300 w-44 justify-center gap-2"
-                                >
-                                  {notif === "loading" && <SigapLoader />}
-                                  {notif === "idle" && "Kirim Notifikasi Resmi"}
-                                  {notif === "loading" && "Mengirim..."}
-                                  {notif === "done" && "✓ Terkirim"}
-                                </Button>
-
-                                <Button
-                                  size="sm"
-                                  disabled={verif !== "idle"}
-                                  onClick={() => handleVerif(platform.id)}
-                                  className="transition-all duration-300 w-44 justify-center gap-2"
-                                >
-                                  {verif === "loading" && <SigapLoader light />}
-                                  {verif === "idle" && "Verifikasi Manual"}
-                                  {verif === "loading" && "Memverifikasi..."}
-                                  {verif === "done" && "✓ Terverifikasi"}
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </Fragment>
-                )
-              })}
-            </TableBody>
-          </Table>
-
-          <div className="flex items-center justify-between px-1 pt-4 text-sm text-slate-500">
-            <p>
-              Menampilkan {mockPlatforms.length} dari{" "}
-              <span className="font-semibold text-slate-700">
-                {summaryStats.totalPlatform.value.toLocaleString("id-ID")}
-              </span>{" "}
-              platform terpantau
-            </p>
-            <button
-              onClick={() => setShowAllModal(true)}
-              className="text-teal-600 font-medium hover:underline"
-            >
-              Lihat semua platform →
-            </button>
-          </div>
+          <ResponsiveContainer width="100%" height={380}>
+            <LineChart data={trendData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="tahun" tick={{ fontSize: 12, fill: "#64748b" }} />
+              <YAxis
+                yAxisId="platform"
+                orientation="left"
+                stroke="#0f172a"
+                tick={{ fontSize: 11, fill: "#0f172a" }}
+                domain={[0, 1400]}
+                label={{ value: "Jumlah Platform", angle: -90, position: "insideLeft", fontSize: 11, fill: "#0f172a" }}
+              />
+              <YAxis
+                yAxisId="persen"
+                orientation="right"
+                stroke="#0d9488"
+                tick={{ fontSize: 11, fill: "#0d9488" }}
+                domain={[0, 100]}
+                label={{ value: "Kepatuhan (%)", angle: 90, position: "insideRight", fontSize: 11, fill: "#0d9488" }}
+              />
+              <YAxis yAxisId="rupiah" orientation="right" domain={[0, 10]} hide />
+              <Tooltip formatter={formatTooltip} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Line
+                yAxisId="platform"
+                type="monotone"
+                dataKey="platform"
+                name="Pertumbuhan Platform"
+                stroke="#0f172a"
+                strokeWidth={2.5}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line
+                yAxisId="persen"
+                type="monotone"
+                dataKey="kepatuhan"
+                name="Tingkat Kepatuhan"
+                stroke="#0d9488"
+                strokeWidth={2.5}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line
+                yAxisId="rupiah"
+                type="monotone"
+                dataKey="pendapatan"
+                name="Pendapatan Pajak PMSE"
+                stroke="#dc2626"
+                strokeWidth={2.5}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+          <p className="text-xs text-slate-400 mt-3">
+            Estimasi ilustratif — pendapatan pajak dalam satuan Rp Triliun/tahun.
+          </p>
         </CardContent>
       </Card>
 
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-1">
-          <Badge className="bg-red-100 text-red-600 hover:bg-red-100 gap-1.5 rounded-full px-2.5">
+          <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-600 rounded-full px-2.5 py-1 text-xs font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
             Prioritas
-          </Badge>
+          </span>
           <h3 className="font-semibold text-slate-800">Anomali Terbaru</h3>
         </div>
         <p className="text-sm text-slate-500 mb-4">
@@ -408,79 +315,6 @@ export default function DjpDashboardPage() {
           </div>
         ))}
       </Card>
-
-      {showAllModal && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200"
-          onClick={() => setShowAllModal(false)}
-        >
-          <div
-            className="bg-white rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <div>
-                <h3 className="font-bold text-slate-800">Seluruh Platform Terpantau</h3>
-                <p className="text-xs text-slate-500">
-                  {summaryStats.totalPlatform.value.toLocaleString("id-ID")} platform terdeteksi sistem
-                </p>
-              </div>
-              <button
-                onClick={() => setShowAllModal(false)}
-                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 text-lg"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="overflow-y-auto flex-1 divide-y">
-              {mockPlatforms.map((platform, index) => (
-                <div
-                  key={platform.id}
-                  className={`flex items-center justify-between px-6 py-3 border-l-4 ${rowColors[index % rowColors.length]}`}
-                >
-                  <div>
-                    <p className="text-sm font-medium text-slate-800">{platform.nama}</p>
-                    <p className="text-xs text-slate-500">{platform.domisili}</p>
-                  </div>
-                  <Badge className={getStatusColor(platform.status)}>
-                    {platform.status}
-                  </Badge>
-                </div>
-              ))}
-
-              {loadedExtra
-                ? extraPlatforms.map((platform, index) => (
-                    <div
-                      key={platform.id}
-                      className={`flex items-center justify-between px-6 py-3 border-l-4 ${rowColors[index % rowColors.length]} animate-in fade-in slide-in-from-bottom-1 duration-300`}
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">{platform.nama}</p>
-                        <p className="text-xs text-slate-500">{platform.domisili}</p>
-                      </div>
-                      <Badge className={getStatusColor(platform.status)}>
-                        {platform.status}
-                      </Badge>
-                    </div>
-                  ))
-                : Array.from({ length: 6 }).map((_, i) => (
-                    <div key={`skeleton-${i}`} className="flex items-center justify-between px-6 py-3 animate-pulse">
-                      <div className="space-y-2">
-                        <div className="h-3 w-32 bg-slate-200 rounded" />
-                        <div className="h-2 w-20 bg-slate-100 rounded" />
-                      </div>
-                      <div className="h-5 w-16 bg-slate-100 rounded-full" />
-                    </div>
-                  ))}
-            </div>
-
-            <div className="px-6 py-3 border-t text-center text-xs text-slate-400">
-              Memuat sebagian dari {summaryStats.totalPlatform.value.toLocaleString("id-ID")} platform...
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

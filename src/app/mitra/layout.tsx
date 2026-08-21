@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Header } from "@/components/header"
+import { SidebarUserBadge } from "@/components/sidebar-user-badge"
 import { ClipboardList, Send, BookOpen } from "lucide-react"
 
 type PageInfo = {
@@ -51,10 +52,13 @@ export default function MitraLayout({
   const router = useRouter()
   const page = pageConfig[pathname] ?? pageConfig["/mitra/dashboard"]
   const [platformName, setPlatformName] = useState("Mitra Platform")
+  const [contactName, setContactName] = useState("Budi Santoso") // TODO: ganti dari data login asli
 
   useEffect(() => {
     const stored = localStorage.getItem("sigap_platform_name")
     if (stored) setPlatformName(stored)
+    const nama = localStorage.getItem("sigap_contact_name")
+    if (nama) setContactName(nama)
   }, [])
 
   const handleLogout = () => {
@@ -66,7 +70,7 @@ export default function MitraLayout({
     <div className="min-h-screen flex flex-col">
       <Header roleLabel={platformName} onLogout={handleLogout} logoutLabel="Sign Out" />
       <div className="flex flex-1">
-        <aside className="w-64 shrink-0 bg-slate-900 text-white p-6">
+        <aside className="w-64 shrink-0 bg-slate-900 text-white p-6 flex flex-col">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
             Portal Mitra
           </p>
@@ -120,6 +124,8 @@ export default function MitraLayout({
               </Link>
             </li>
           </ul>
+
+          <SidebarUserBadge name={contactName} role={platformName} colorClass="bg-amber-600" />
         </aside>
 
         <main className="flex-1 bg-gray-50">

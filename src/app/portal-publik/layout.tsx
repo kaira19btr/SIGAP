@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Search, Flag } from "lucide-react"
 import { Header } from "@/components/header"
+import { SidebarUserBadge } from "@/components/sidebar-user-badge"
 
 const menuItems = [
   { href: "/portal-publik", label: "Cek Status SKD Platform", icon: Search },
@@ -27,7 +28,7 @@ export default function PortalPublikLayout({
       <Header roleLabel="Layanan Publik" onLogout={handleLogout} />
 
       <div className="flex flex-1">
-        <aside className="w-72 bg-[#0b1120] p-6 shrink-0">
+        <aside className="w-72 bg-[#0b1120] p-6 shrink-0 flex flex-col">
           <p className="text-xs font-semibold text-slate-500 tracking-wide mb-4 px-2">
             LAYANAN PUBLIK
           </p>
@@ -51,6 +52,8 @@ export default function PortalPublikLayout({
               )
             })}
           </nav>
+
+          <SidebarUserBadge name="Pengunjung" role="Akses Publik" colorClass="bg-slate-600" />
         </aside>
 
         <main className="flex-1 bg-white p-8">{children}</main>
