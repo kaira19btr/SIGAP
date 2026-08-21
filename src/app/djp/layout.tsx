@@ -14,6 +14,8 @@ import {
   Flag,
   Globe2,
   ScrollText,
+  Flame,
+  Network,
 } from "lucide-react"
 
 const pageConfig: Record<string, { section: string; title: string; subtitle: string }> = {
@@ -51,6 +53,16 @@ const pageConfig: Record<string, { section: string; title: string; subtitle: str
     section: "Investigasi",
     title: "Peta Sebaran Global",
     subtitle: "Distribusi platform PMSE berdasarkan negara asal",
+  },
+  "/djp/tren-media-sosial": {
+    section: "Investigasi",
+    title: "Tren Media Sosial",
+    subtitle: "Platform asing yang sedang viral, dipantau sebagai sinyal tambahan",
+  },
+  "/djp/federasi-internasional": {
+  section: "Federasi Internasional",
+  title: "Pertukaran Data Platform",
+  subtitle: "Tukar data aset dan kepemilikan dengan otoritas pajak asing via NIIS X-Road",
   },
   "/djp/jejak-audit": {
     section: "Tata Kelola",
@@ -157,6 +169,33 @@ export default function DjpLayout({
               >
                 <Globe2 className="w-4 h-4 shrink-0" />
                 Peta Sebaran Global
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/djp/tren-media-sosial"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md ${
+                  pathname === "/djp/tren-media-sosial" ? "bg-teal-600 text-white" : "hover:bg-slate-800"
+                }`}
+              >
+                <Flame className="w-4 h-4 shrink-0" />
+                Tren Media Sosial
+              </Link>
+            </li>
+          </ul>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+            Federasi Internasional
+          </p>
+          <ul className="space-y-1 text-sm mb-6">
+            <li>
+              <Link
+                href="/djp/federasi-internasional"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md ${
+                  pathname === "/djp/federasi-internasional" ? "bg-teal-600 text-white" : "hover:bg-slate-800"
+                }`}
+              >
+                <Network className="w-4 h-4 shrink-0" />
+                Pertukaran Data Platform
               </Link>
             </li>
           </ul>
