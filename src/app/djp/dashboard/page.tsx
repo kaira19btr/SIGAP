@@ -28,11 +28,12 @@ const trendData = [
   { tahun: "2026", platform: 1284, kepatuhan: 74, pendapatan: 8.8 },
 ]
 
-function formatTooltip(value: number, name: string) {
-  if (name === "Pertumbuhan Platform") return [value.toLocaleString("id-ID") + " platform", name]
-  if (name === "Tingkat Kepatuhan") return [`${value}%`, name]
-  if (name === "Pendapatan Pajak PMSE") return [`Rp${value} T`, name]
-  return [value, name]
+function formatTooltip(value: number | string | undefined, name: string) {
+  const v = typeof value === "number" ? value : Number(value) || 0
+  if (name === "Pertumbuhan Platform") return [v.toLocaleString("id-ID") + " platform", name]
+  if (name === "Tingkat Kepatuhan") return [`${v}%`, name]
+  if (name === "Pendapatan Pajak PMSE") return [`Rp${v} T`, name]
+  return [v, name]
 }
 
 const anomaliList = [
@@ -231,7 +232,7 @@ export default function DjpDashboardPage() {
                 label={{ value: "Kepatuhan (%)", angle: 90, position: "insideRight", fontSize: 11, fill: "#0d9488" }}
               />
               <YAxis yAxisId="rupiah" orientation="right" domain={[0, 10]} hide />
-              <Tooltip formatter={formatTooltip} />
+              <Tooltip formatter={formatTooltip as any} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line
                 yAxisId="platform"
